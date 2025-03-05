@@ -1,0 +1,323 @@
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #1a2a3a;
+    color: #ffffff;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 500px;
+    height: 100vh;
+    max-height: 900px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1a2a3a 0%, #0d1b2a 100%);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* 屏幕样式 */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s;
+    padding: 20px;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 开始界面样式 */
+.game-title {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: #4ecdc4;
+    text-shadow: 0 2px 10px rgba(78, 205, 196, 0.5);
+}
+
+.game-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 40px;
+    color: #f7fff7;
+}
+
+/* 按钮样式 */
+.btn {
+    background-color: #2a9d8f;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    margin: 10px;
+    border-radius: 30px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    background-color: #264653;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background-color: #e76f51;
+}
+
+.btn-primary:hover {
+    background-color: #e9c46a;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+}
+
+.btn-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+}
+
+.btn-back {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+}
+
+/* 关卡选择样式 */
+.levels-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    max-width: 400px;
+    margin: 20px 0;
+}
+
+.level-item {
+    width: 60px;
+    height: 60px;
+    background-color: #264653;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.level-item:hover {
+    background-color: #2a9d8f;
+    transform: scale(1.05);
+}
+
+.level-item.completed {
+    background-color: #2a9d8f;
+}
+
+.level-item.locked {
+    background-color: #1a2a3a;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* 游戏界面样式 */
+.game-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(26, 42, 58, 0.8);
+    z-index: 10;
+}
+
+.bottles-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    height: 70%;
+    width: 100%;
+    padding: 60px 10px 10px;
+}
+
+.bottle {
+    width: 60px;
+    height: 180px;
+    margin: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.bottle:hover {
+    transform: translateY(-5px);
+}
+
+.bottle-inner {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px 10px 30px 30px;
+    overflow: hidden;
+    position: relative;
+}
+
+.bottle-neck {
+    width: 70%;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px 10px 0 0;
+    position: absolute;
+    top: -10px;
+    left: 15%;
+}
+
+.liquid-layer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 25%;
+    transition: all 0.5s ease;
+}
+
+.bottle.selected {
+    transform: translateY(-10px);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.game-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+/* 设置界面样式 */
+.settings-options {
+    width: 80%;
+    max-width: 300px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+/* 添加设置项的开关样式 */
+input[type="checkbox"] {
+    appearance: none;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #2a9d8f;
+}
+
+input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+}
+
+input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
+
+/* 胜利界面样式 */
+.victory-screen {
+    text-align: center;
+}
+
+.stars-container {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+}
+
+.victory-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+/* 隐藏元素 */
+.hidden {
+    display: none !important;
+}
+
+/* 禁用状态 */
+.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* 加载动画 */
+.loading {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #2a9d8f;
+    animation: spin 1s ease-in-out infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彩虹水滴 - Rainbow Drops</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- 开始界面 -->
+        <div id="start-screen" class="screen active">
+            <h1 class="game-title">彩虹水滴</h1>
+            <h2 class="game-subtitle">Rainbow Drops</h2>
+            <button id="start-button" class="btn btn-primary">开始游戏</button>
+            <button id="levels-button" class="btn">关卡选择</button>
+            <button id="settings-button" class="btn">设置</button>
+        </div>
+
+        <!-- 关卡选择界面 -->
+        <div id="levels-screen" class="screen">
+            <h2>关卡选择</h2>
+            <div class="levels-grid" id="levels-grid">
+                <!-- 关卡将通过JS动态生成 -->
+            </div>
+            <button id="back-from-levels" class="btn btn-back">返回</button>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div class="level-info">关卡: <span id="current-level">1</span></div>
+                <div class="game-controls">
+                    <button id="reset-button" class="btn btn-small">重置</button>
+                    <button id="hint-button" class="btn btn-small">提示</button>
+                    <button id="back-to-menu" class="btn btn-small">菜单</button>
+                </div>
+            </div>
+            
+            <div class="bottles-container" id="bottles-container">
+                <!-- 瓶子将通过JS动态生成 -->
+            </div>
+            
+            <div class="game-footer">
+                <button id="undo-button" class="btn btn-circle">↩</button>
+                <button id="next-level" class="btn btn-primary hidden">下一关</button>
+            </div>
+        </div>
+        
+        <!-- 设置界面 -->
+        <div id="settings-screen" class="screen">
+            <h2>设置</h2>
+            <div class="settings-options">
+                <div class="setting-item">
+                    <label for="sound-toggle">音效</label>
+                    <input type="checkbox" id="sound-toggle" checked>
+                </div>
+                <div class="setting-item">
+                    <label for="music-toggle">音乐</label>
+                    <input type="checkbox" id="music-toggle" checked>
+                </div>
+                <div class="setting-item">
+                    <label for="vibration-toggle">振动</label>
+                    <input type="checkbox" id="vibration-toggle" checked>
+                </div>
+            </div>
+            <button id="back-from-settings" class="btn btn-back">返回</button>
+        </div>
+
+        <!-- 胜利界面 -->
+        <div id="victory-screen" class="screen">
+            <h2>恭喜通关！</h2>
+            <div class="stars-container">
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+            </div>
+            <div class="victory-buttons">
+                <button id="replay-button" class="btn">重玩</button>
+                <button id="next-level-victory" class="btn btn-primary">下一关</button>
+                <button id="menu-button" class="btn">主菜单</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 脚本引入 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/fluid.js"></script>
+    <script src="js/animation.js"></script>
+    <script src="js/sound.js"></script>
+    <script src="js/debug.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

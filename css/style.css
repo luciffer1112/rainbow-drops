@@ -1,0 +1,18 @@
+/* 添加或修改以下样式 */
+.bottle {
+    transition: transform 0.3s ease-out;
+    transform: rotate(0deg) !important; /* 强制瓶子保持直立，除非在动画中 */
+}
+
+.bottle.pouring {
+    transition: none; /* 动画瓶子不使用CSS过渡，而是使用JS动画 */
+    transform: none !important; /* 移除强制样式，允许JS控制 */
+}
+
+/* 确保隐藏的元素真的被隐藏 */
+[data-hidden="true"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}

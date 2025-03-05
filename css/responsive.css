@@ -1,0 +1,101 @@
+/* 响应式设计 */
+
+/* 小屏幕设备 (手机, 600px 以下) */
+@media only screen and (max-width: 600px) {
+    .game-title {
+        font-size: 2.5rem;
+    }
+    
+    .game-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .bottle {
+        width: 50px;
+        height: 150px;
+        margin: 8px;
+    }
+    
+    .levels-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .level-item {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+/* 中等屏幕设备 (平板电脑, 600px 到 992px) */
+@media only screen and (min-width: 600px) and (max-width: 992px) {
+    .game-container {
+        max-width: 600px;
+    }
+    
+    .bottle {
+        width: 55px;
+        height: 165px;
+    }
+    
+    .levels-grid {
+        grid-template-columns: repeat(5, 1fr);
+        max-width: 500px;
+    }
+}
+
+/* 大屏幕设备 (笔记本/台式机, 992px 以上) */
+@media only screen and (min-width: 992px) {
+    .game-container {
+        max-width: 800px;
+        max-height: 800px;
+    }
+    
+    .bottle {
+        width: 65px;
+        height: 195px;
+        margin: 12px;
+    }
+    
+    .levels-grid {
+        grid-template-columns: repeat(6, 1fr);
+        max-width: 600px;
+    }
+    
+    .level-item {
+        width: 70px;
+        height: 70px;
+        font-size: 1.4rem;
+    }
+}
+
+/* 横屏模式 */
+@media only screen and (orientation: landscape) and (max-height: 600px) {
+    .game-container {
+        max-height: 100vh;
+    }
+    
+    .game-title {
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+    
+    .game-subtitle {
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+    
+    .bottles-container {
+        height: 60%;
+        padding-top: 50px;
+    }
+    
+    .bottle {
+        height: 140px;
+    }
+}
