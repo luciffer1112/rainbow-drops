@@ -153,6 +153,36 @@ function setupEventListeners() {
     });
 }
 
+// 加载游戏进度
+function loadGameProgress() {
+    const progressData = localStorage.getItem('gameProgress');
+    if (progressData) {
+        try {
+            return JSON.parse(progressData);
+        } catch (e) {
+            console.error('解析游戏进度数据失败:', e);
+        }
+    }
+    // 如果没有保存的进度或解析失败，返回默认进度
+    return {
+        currentLevel: 1,
+        completedLevels: [],
+        tutorialShown: false
+    };
+}
+
+// 保存游戏进度
+function saveGameProgress(currentLevel, stars, completedLevels) {
+    const progress = {
+        currentLevel: currentLevel,
+        stars: stars || {},
+        completedLevels: completedLevels || []
+    };
+    
+    localStorage.setItem('gameProgress', JSON.stringify(progress));
+    console.log('游戏进度已保存:', progress);
+}
+
 // 显示关卡选择界面
 function showLevelsScreen() {
     // 获取已完成的关卡
@@ -163,31 +193,92 @@ function showLevelsScreen() {
     const levelsGrid = document.getElementById('levels-grid');
     levelsGrid.innerHTML = '';
     
-    // 添加关卡按钮
-    for (let i = 0; i < LEVELS.length; i++) {
-        const levelNumber = i + 1;
-        const levelItem = document.createElement('div');
-        levelItem.className = 'level-item';
-        
-        // 设置关卡状态
-        if (completedLevels.includes(levelNumber)) {
-            levelItem.classList.add('completed');
-        } else if (levelNumber > progress.currentLevel) {
-            levelItem.classList.add('locked');
+    // 创建分页系统
+    const levelsPerPage = 20; // 每页显示20关
+    let currentLevelsPage = 0;
+    const totalPages = Math.ceil(LEVELS.length / levelsPerPage);
+    
+    // 创建分页控制器
+    const paginationContainer = document.createElement('div');
+    paginationContainer.className = 'pagination-container';
+    
+    // 添加上一页按钮
+    const prevButton = document.createElement('button');
+    prevButton.className = 'btn btn-small pagination-btn';
+    prevButton.textContent = '上一页';
+    prevButton.addEventListener('click', () => {
+        if (currentLevelsPage > 0) {
+            currentLevelsPage--;
+            renderLevelsPage();
         }
-        
-        levelItem.textContent = levelNumber;
-        
-        // 添加点击事件（仅对未锁定的关卡）
-        if (!levelItem.classList.contains('locked')) {
-            levelItem.addEventListener('click', () => {
-                gameState.soundManager.play('click');
-                startLevel(levelNumber);
-            });
+    });
+    paginationContainer.appendChild(prevButton);
+    
+    // 添加页码显示
+    const pageInfo = document.createElement('div');
+    pageInfo.className = 'page-info';
+    pageInfo.textContent = `${currentLevelsPage + 1}/${totalPages}`;
+    paginationContainer.appendChild(pageInfo);
+    
+    // 添加下一页按钮
+    const nextButton = document.createElement('button');
+    nextButton.className = 'btn btn-small pagination-btn';
+    nextButton.textContent = '下一页';
+    nextButton.addEventListener('click', () => {
+        if (currentLevelsPage < totalPages - 1) {
+            currentLevelsPage++;
+            renderLevelsPage();
         }
-        
-        levelsGrid.appendChild(levelItem);
+    });
+    paginationContainer.appendChild(nextButton);
+    
+    // 在关卡网格前插入分页控制器
+    const levelsScreen = document.getElementById('levels-screen');
+    // 检查是否已存在分页控制器，如果存在则移除
+    const existingPagination = levelsScreen.querySelector('.pagination-container');
+    if (existingPagination) {
+        existingPagination.remove();
     }
+    levelsScreen.insertBefore(paginationContainer, levelsGrid);
+    
+    // 渲染当前页的关卡
+    function renderLevelsPage() {
+        levelsGrid.innerHTML = '';
+        pageInfo.textContent = `${currentLevelsPage + 1}/${totalPages}`;
+        
+        const startLevel = currentLevelsPage * levelsPerPage;
+        const endLevel = Math.min(startLevel + levelsPerPage, LEVELS.length);
+        
+        for (let i = startLevel; i < endLevel; i++) {
+            const levelNumber = i + 1;
+            const levelItem = document.createElement('div');
+            levelItem.className = 'level-item';
+            
+            // 设置关卡状态
+            if (completedLevels.includes(levelNumber)) {
+                levelItem.classList.add('completed');
+            } else if (levelNumber > progress.currentLevel) {
+                levelItem.classList.add('locked');
+            }
+            
+            levelItem.textContent = levelNumber;
+            
+            // 只有锁定的关卡不能点击
+            if (levelNumber <= progress.currentLevel || completedLevels.includes(levelNumber)) {
+                levelItem.addEventListener('click', () => {
+                    console.log(`点击关卡 ${levelNumber}`); // 添加调试日志
+                    gameState.soundManager.play('click');
+                    // 修改这里，使用window.startLevel而不是直接使用startLevel
+                    window.startLevel(levelNumber);
+                });
+            }
+            
+            levelsGrid.appendChild(levelItem);
+        }
+    }
+    
+    // 初始渲染第一页
+    renderLevelsPage();
     
     showScreen('levels-screen');
 }
@@ -238,10 +329,100 @@ function startLevel(levelNumber) {
     
     // 显示关卡介绍动画
     showLevelIntro(levelNumber);
+
+    // 检查是否需要显示新手教程
+    if (levelNumber === 1 && !localStorage.getItem('tutorialShown')) {
+        showTutorial();
+    } else {
+        // 显示关卡介绍动画
+        showLevelIntro(levelNumber);
+    }
     
-    // 保存游戏进度
-    saveGameProgress(levelNumber, {}, loadGameProgress().completedLevels || []);
+    // 获取当前进度，保持最高解锁关卡不变
+    const progress = loadGameProgress();
+    // 修改：只保存当前正在玩的关卡，不改变最高解锁关卡
+    saveGameProgress(Math.max(progress.currentLevel, levelNumber), progress.stars, progress.completedLevels || []);
 }
+
+// 添加新手教程函数
+function showTutorial() {
+    // 创建教程覆盖层
+    const tutorialOverlay = document.createElement('div');
+    tutorialOverlay.className = 'tutorial-overlay';
+    
+    // 创建教程内容
+    const tutorialContent = document.createElement('div');
+    tutorialContent.className = 'tutorial-content';
+    
+    // 教程步骤
+    const steps = [
+        {
+            text: '欢迎来到彩虹水滴！这是一个简单的教程。',
+            position: 'center'
+        },
+        {
+            text: '游戏目标是将相同颜色的液体集中到同一个瓶子中。',
+            position: 'center'
+        },
+        {
+            text: '点击一个瓶子选中它，然后点击另一个瓶子将液体倒入。',
+            position: 'bottom'
+        },
+        {
+            text: '只有相同颜色的液体才能叠加在一起。',
+            position: 'bottom'
+        },
+        {
+            text: '如果需要撤销操作，可以点击左下角的撤销按钮。',
+            position: 'bottom-left'
+        },
+        {
+            text: '准备好了吗？让我们开始吧！',
+            position: 'center'
+        }
+    ];
+    
+    let currentStep = 0;
+    
+    // 创建教程步骤显示
+    function showStep(step) {
+        tutorialContent.innerHTML = '';
+        
+        const textBox = document.createElement('div');
+        textBox.className = 'tutorial-text ' + step.position;
+        textBox.textContent = step.text;
+        
+        const nextButton = document.createElement('button');
+        nextButton.className = 'btn btn-small';
+        nextButton.textContent = currentStep < steps.length - 1 ? '下一步' : '开始游戏';
+        nextButton.addEventListener('click', () => {
+            gameState.soundManager.play('click');
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                showStep(steps[currentStep]);
+            } else {
+                // 完成教程
+                document.body.removeChild(tutorialOverlay);
+                localStorage.setItem('tutorialShown', 'true');
+                showLevelIntro(1);
+            }
+        });
+        
+        textBox.appendChild(document.createElement('br'));
+        textBox.appendChild(nextButton);
+        tutorialContent.appendChild(textBox);
+    }
+    
+    tutorialOverlay.appendChild(tutorialContent);
+    document.body.appendChild(tutorialOverlay);
+    
+    // 显示第一步
+    showStep(steps[currentStep]);
+}
+
+
+// 将startLevel函数添加到全局作用域
+window.startLevel = startLevel;
 
 // 处理瓶子点击
 function handleBottleClick(bottle) {
@@ -287,7 +468,11 @@ function handleBottleClick(bottle) {
         gameState.selectedBottle = null;
         
         // 执行倒水操作
+        // 在倒水前保存瓶子状态
+        const sourceLayersBefore = [...sourceBottle.layers];
+        const targetLayersBefore = [...targetBottle.layers];
         const success = gameState.fluidSimulation.pourWater(sourceBottle, targetBottle, () => {
+ 
             // 更新瓶子视图
             updateBottleView(document.getElementById(`bottle-${sourceBottle.id}`), sourceBottle);
             updateBottleView(document.getElementById(`bottle-${targetBottle.id}`), targetBottle);
@@ -296,12 +481,12 @@ function handleBottleClick(bottle) {
             const sourceColor = sourceBottle.layers.length > 0 ? 
                 sourceBottle.layers[sourceBottle.layers.length - 1] : null;
                 
-            gameState.moveHistory.push({
-                sourceId: sourceBottle.id,
-                targetId: targetBottle.id,
-                sourceBefore: [...sourceBottle.layers],
-                targetBefore: [...targetBottle.layers]
-            });
+                gameState.moveHistory.push({
+                    sourceId: sourceBottle.id,
+                    targetId: targetBottle.id,
+                    sourceBefore: sourceLayersBefore,
+                    targetBefore: targetLayersBefore
+                });
             
             // 检查是否完成关卡
             checkLevelComplete();
@@ -333,6 +518,12 @@ function checkLevelComplete() {
             // 更新已完成关卡
             const progress = loadGameProgress();
             const completedLevels = progress.completedLevels || [];
+
+            // 确保completedLevels是数组
+            if (!Array.isArray(completedLevels)) {
+                completedLevels = [];
+            }
+
             if (!completedLevels.includes(gameState.currentLevel)) {
                 completedLevels.push(gameState.currentLevel);
             }
@@ -343,8 +534,8 @@ function checkLevelComplete() {
                 nextLevel = gameState.currentLevel + 1;
             }
             
-            // 保存游戏进度
-            saveGameProgress(nextLevel, progress.stars, completedLevels);
+            // 修改：保存游戏进度时，确保currentLevel是最高解锁关卡
+            saveGameProgress(Math.max(progress.currentLevel, nextLevel), progress.stars, completedLevels);
             
             // 播放星星音效
             setTimeout(() => {
@@ -367,25 +558,102 @@ function resetLevel() {
 
 // 撤销移动
 function undoMove() {
-    if (gameState.moveHistory.length === 0 || !gameState.isGameActive) return;
-    
+    if (gameState.moveHistory.length === 0 || !gameState.isGameActive) {
+        console.log("无法撤销：没有移动历史或游戏不活跃");
+        return;
+    }
+    console.log("执行撤销操作，移动历史长度:", gameState.moveHistory.length);
     // 获取最后一次移动
     const lastMove = gameState.moveHistory.pop();
+    console.log("撤销的移动:", lastMove);
     
     // 获取源瓶子和目标瓶子
     const sourceBottle = gameState.bottles.find(bottle => bottle.id === lastMove.sourceId);
     const targetBottle = gameState.bottles.find(bottle => bottle.id === lastMove.targetId);
+    if (!sourceBottle || !targetBottle) {
+        console.error("撤销失败：找不到相关的瓶子", lastMove.sourceId, lastMove.targetId);
+        return;
+    }
     
-    // 恢复瓶子状态
-    sourceBottle.layers = lastMove.sourceBefore;
-    targetBottle.layers = lastMove.targetBefore;
+    // 恢复瓶子状态（确保数据类型正确）
+    if (Array.isArray(lastMove.sourceBefore)) {
+        sourceBottle.layers = [...lastMove.sourceBefore];
+    } else {
+        console.error("撤销失败：sourceBefore不是数组", lastMove.sourceBefore);
+        return;
+    }
     
-    // 更新瓶子视图
-    updateBottleView(document.getElementById(`bottle-${sourceBottle.id}`), sourceBottle);
-    updateBottleView(document.getElementById(`bottle-${targetBottle.id}`), targetBottle);
+    if (Array.isArray(lastMove.targetBefore)) {
+        targetBottle.layers = [...lastMove.targetBefore];
+    } else {
+        console.error("撤销失败：targetBefore不是数组", lastMove.targetBefore);
+        return;
+    }
+
+    console.log("恢复后的瓶子状态:", 
+        "源瓶子:", sourceBottle.id, sourceBottle.layers, 
+        "目标瓶子:", targetBottle.id, targetBottle.layers);
+    
+    // 强制更新瓶子视图
+    const sourceElement = document.getElementById(`bottle-${sourceBottle.id}`);
+    const targetElement = document.getElementById(`bottle-${targetBottle.id}`);
+    
+    if (sourceElement && targetElement) {
+        // 清空瓶子内部元素并重新创建
+        const sourceInner = sourceElement.querySelector('.bottle-inner');
+        const targetInner = targetElement.querySelector('.bottle-inner');
+        
+        if (sourceInner && targetInner) {
+            sourceInner.innerHTML = '';
+            targetInner.innerHTML = '';
+            
+            // 重新创建液体层
+            sourceBottle.layers.forEach((color, index) => {
+                const layer = document.createElement('div');
+                layer.className = 'liquid-layer';
+                layer.style.backgroundColor = color;
+                layer.style.bottom = `${index * 25}%`;
+                sourceInner.appendChild(layer);
+            });
+            
+            targetBottle.layers.forEach((color, index) => {
+                const layer = document.createElement('div');
+                layer.className = 'liquid-layer';
+                layer.style.backgroundColor = color;
+                layer.style.bottom = `${index * 25}%`;
+                targetInner.appendChild(layer);
+            });
+        }
+    }
     
     // 播放音效
     gameState.soundManager.play('click');
+    // 添加视觉反馈
+    const undoButton = document.getElementById('undo-button');
+    undoButton.classList.add('active');
+    setTimeout(() => {
+        undoButton.classList.remove('active');
+    }, 300);
+}
+
+// 更新瓶子视图
+function updateBottleView(bottleElement, bottle) {
+    if (!bottleElement) return;
+    
+    const bottleInner = bottleElement.querySelector('.bottle-inner');
+    if (!bottleInner) return;
+    
+    // 清空瓶子内部
+    bottleInner.innerHTML = '';
+    
+    // 添加液体层
+    bottle.layers.forEach((color, index) => {
+        const layer = document.createElement('div');
+        layer.className = 'liquid-layer';
+        layer.style.backgroundColor = color;
+        layer.style.bottom = `${index * 25}%`;
+        bottleInner.appendChild(layer);
+    });
 }
 
 // 显示提示

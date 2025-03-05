@@ -77,6 +77,36 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* 主页按钮样式 */
+#start-screen .btn {
+    min-width: 150px;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 15px;
+}
+
+.pagination-btn {
+    min-width: 80px;
+}
+
+/* 按钮活跃状态 */
+.btn.active {
+    transform: scale(0.95);
+    background-color: #1a7f73;
+}
+
+.page-info {
+    font-size: 1rem;
+    color: #ffffff;
+    text-align: center;
+}
+
 .btn:hover {
     background-color: #264653;
     transform: translateY(-2px);
@@ -282,6 +312,14 @@ input[type="checkbox"]:checked::before {
     text-align: center;
 }
 
+/* 添加胜利标题样式，与游戏标题保持一致 */
+.victory-title {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #4ecdc4;
+    text-shadow: 0 2px 10px rgba(78, 205, 196, 0.5);
+}
+
 .stars-container {
     display: flex;
     justify-content: center;
@@ -293,6 +331,29 @@ input[type="checkbox"]:checked::before {
     flex-direction: column;
     align-items: center;
     margin-top: 20px;
+    width: 100%;
+}
+
+/* 修改胜利界面按钮样式 */
+#victory-screen .btn,
+#replay-button,
+#next-level-victory,
+#menu-button {
+    min-width: 150px;
+    width: 80%;
+    max-width: 200px;
+    text-align: center;
+    margin: 8px auto;
+    padding: 12px 24px;
+    font-size: 1rem;
+    display: block;
+}
+
+/* 确保按钮内文字居中 */
+#replay-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* 隐藏元素 */
@@ -316,6 +377,58 @@ input[type="checkbox"]:checked::before {
     border-top-color: #2a9d8f;
     animation: spin 1s ease-in-out infinite;
     margin: 20px auto;
+}
+
+/* 教程样式 */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tutorial-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.tutorial-text {
+    background-color: rgba(42, 157, 143, 0.9);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    max-width: 80%;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    position: absolute;
+}
+
+.tutorial-text.center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.tutorial-text.bottom {
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.tutorial-text.bottom-left {
+    bottom: 100px;
+    left: 80px;
+}
+
+.tutorial-text button {
+    margin-top: 15px;
 }
 
 @keyframes spin {

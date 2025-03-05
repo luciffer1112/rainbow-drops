@@ -11,6 +11,8 @@ class SoundManager {
         
         // 初始化音效
         this.initSounds();
+        // 添加用户交互监听器来解锁音频
+        this.setupAudioUnlock();
     }
     
     // 初始化音效
@@ -49,8 +51,39 @@ class SoundManager {
         this.music = new Howl({
             src: ['assets/sounds/background.mp3'],
             volume: 0.3,
-            loop: true
+            loop: true,
+            onload: () => {
+                console.log('背景音乐加载完成');
+                // 尝试播放音乐
+                this.tryPlayMusic();
+            }
         });
+    }
+    // 设置音频解锁
+    setupAudioUnlock() {
+        // 监听用户交互事件来解锁音频
+        const unlockEvents = ['touchstart', 'touchend', 'mousedown', 'keydown'];
+        const unlockAudio = () => {
+            unlockEvents.forEach(event => {
+                document.removeEventListener(event, unlockAudio);
+            });
+            // 尝试播放音乐
+            this.tryPlayMusic();
+        };
+        
+        unlockEvents.forEach(event => {
+            document.addEventListener(event, unlockAudio, false);
+        });
+    }
+    
+    // 尝试播放音乐
+    tryPlayMusic() {
+        if (this.isMusicEnabled && this.music && !this.music.playing()) {
+            // 使用延迟确保浏览器已经准备好播放音频
+            setTimeout(() => {
+                this.playMusic();
+            }, 1000);
+        }
     }
     
     // 播放音效
@@ -64,6 +97,12 @@ class SoundManager {
     playMusic() {
         if (this.isMusicEnabled && this.music) {
             this.music.play();
+        }
+    }
+    // 停止背景音乐
+    stopMusic() {
+        if (this.music && this.music.playing()) {
+            this.music.stop();
         }
     }
     
