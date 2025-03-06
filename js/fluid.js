@@ -481,7 +481,7 @@ class FluidSimulation {
             
             // 计算水流长度和角度
             const dx = targetX - startXX;
-            const dy = targetY - startXx*0.6;
+            const dy = targetY - startXx*0.7;
             //const length = Math.sqrt(dx * dx + dy * dy);
             const length = dy;
             const angle = Math.atan2(dy, dx) * (180 / Math.PI);
