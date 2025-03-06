@@ -99,3 +99,20 @@
         height: 140px;
     }
 }
+/* 通用水流样式 - 添加在文件末尾 */
+.water-stream {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+    transform-origin: top center !important;
+}
+
+.water-body {
+    position: absolute;
+    transform-origin: top center;
+    left: 50%;
+    transform: translateX(-50%) rotate(1deg) !important;
+    width: 10px !important;
+    min-width: 8px;
+    max-width: 12px;
+}

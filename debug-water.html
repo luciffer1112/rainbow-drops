@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水流调试工具</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        body {
+            background-color: #1a2a3a;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .debug-container {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            border: 1px solid #ccc;
+            overflow: hidden;
+        }
+        
+        .test-bottle {
+            position: absolute;
+            width: 60px;
+            height: 180px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 10px 10px 5px 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            margin-right: 20px;
+            min-width: 150px;
+        }
+        
+        label {
+            margin-bottom: 5px;
+        }
+        
+        .device-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        
+        .device-selector {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .device-btn {
+            padding: 8px 15px;
+            background-color: #2c3e50;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .device-btn.active {
+            background-color: #27ae60;
+        }
+        
+        .bottle-controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .bottle-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .bottle-preview {
+            width: 40px;
+            height: 120px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 8px 8px 4px 4px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .bottle-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .code-output {
+            margin-top: 20px;
+            background-color: #2c3e50;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .water-stream {
+            position: absolute;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .water-body {
+            position: absolute;
+            transform-origin: top center;
+        }
+        
+        .pour-element {
+            position: absolute;
+            z-index: 5;
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-info">
+        <div>屏幕宽度: <span id="screen-width"></span>px</div>
+        <div>屏幕高度: <span id="screen-height"></span>px</div>
+        <div>设备类型: <span id="device-type"></span></div>
+    </div>
+    
+    <h1>水流位置调试工具</h1>
+    
+    <div class="device-selector">
+        <button class="device-btn active" data-device="desktop">桌面设备</button>
+        <button class="device-btn" data-device="iphone">iPhone</button>
+        <button class="device-btn" data-device="android">Android</button>
+        <button class="device-btn" data-device="ipad">iPad</button>
+    </div>
+    
+    <div class="bottle-controls">
+        <div class="bottle-control">
+            <div class="bottle-preview" id="source-preview">
+                <div class="bottle-layer" style="height: 25%; background-color: red;"></div>
+                <div class="bottle-layer" style="height: 50%; background-color: blue;"></div>
+            </div>
+            <label>源瓶</label>
+        </div>
+        
+        <div class="bottle-control">
+            <div class="bottle-preview" id="target-preview">
+                <div class="bottle-layer" style="height: 25%; background-color: green;"></div>
+            </div>
+            <label>目标瓶</label>
+        </div>
+    </div>
+    
+    <div class="debug-container" id="debug-container">
+        <div class="test-bottle" id="source-bottle" style="left: 20%; top: 20%;"></div>
+        <div class="test-bottle" id="target-bottle" style="right: 20%; bottom: 20%;"></div>
+    </div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <button id="test-water">测试倒水</button>
+            <button id="reset">重置</button>
+        </div>
+        
+        <div class="control-group">
+            <label for="water-width">水流宽度 (px)</label>
+            <input type="range" id="water-width" min="4" max="20" value="10">
+            <span id="width-value">10px</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="water-angle">水流角度 (度)</label>
+            <input type="range" id="water-angle" min="-10" max="10" value="1">
+            <span id="angle-value">1°</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="start-x-offset">起点X偏移 (%)</label>
+            <input type="range" id="start-x-offset" min="0" max="100" value="50">
+            <span id="start-x-value">50%</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="start-y-offset">起点Y偏移 (%)</label>
+            <input type="range" id="start-y-offset" min="0" max="100" value="90">
+            <span id="start-y-value">90%</span>
+        </div>
+    </div>
+    
+    <div class="code-output" id="code-output">// 调整后的代码将显示在这里</div>
+    
+    <script>
+        // 显示设备信息
+        function updateDeviceInfo() {
+            document.getElementById('screen-width').textContent = window.innerWidth;
+            document.getElementById('screen-height').textContent = window.innerHeight;
+            
+            let deviceType = "桌面设备";
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                deviceType = "移动设备";
+            }
+            document.getElementById('device-type').textContent = deviceType;
+        }
+        
+        updateDeviceInfo();
+        window.addEventListener('resize', updateDeviceInfo);
+        
+        // 设备模拟
+        const deviceButtons = document.querySelectorAll('.device-btn');
+        const debugContainer = document.getElementById('debug-container');
+        
+        const deviceSettings = {
+            desktop: { width: '100%', height: '70vh' },
+            iphone: { width: '375px', height: '667px' },
+            android: { width: '360px', height: '640px' },
+            ipad: { width: '768px', height: '1024px' }
+        };
+        
+        deviceButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 移除所有活跃状态
+                deviceButtons.forEach(b => b.classList.remove('active'));
+                // 添加当前活跃状态
+                this.classList.add('active');
+                
+                // 应用设备尺寸
+                const device = this.getAttribute('data-device');
+                debugContainer.style.width = deviceSettings[device].width;
+                debugContainer.style.height = deviceSettings[device].height;
+                
+                // 重新定位瓶子
+                positionBottles();
+                
+                // 如果有水流，更新它
+                updateWaterStream();
+            });
+        });
+        
+        // 控制器
+        const widthSlider = document.getElementById('water-width');
+        const angleSlider = document.getElementById('water-angle');
+        const startXSlider = document.getElementById('start-x-offset');
+        const startYSlider = document.getElementById('start-y-offset');
+        
+        const widthValue = document.getElementById('width-value');
+        const angleValue = document.getElementById('angle-value');
+        const startXValue = document.getElementById('start-x-value');
+        const startYValue = document.getElementById('start-y-value');
+        
+        // 更新显示值
+        widthSlider.addEventListener('input', function() {
+            widthValue.textContent = this.value + 'px';
+            updateWaterStream();
+        });
+        
+        angleSlider.addEventListener('input', function() {
+            angleValue.textContent = this.value + '°';
+            updateWaterStream();
+        });
+        
+        startXSlider.addEventListener('input', function() {
+            startXValue.textContent = this.value + '%';
+            updateWaterStream();
+        });
+        
+        startYSlider.addEventListener('input', function() {
+            startYValue.textContent = this.value + '%';
+            updateWaterStream();
+        });
+        
+        // 瓶子定位
+        function positionBottles() {
+            const sourceBottle = document.getElementById('source-bottle');
+            const targetBottle = document.getElementById('target-bottle');
+            
+            // 根据预览更新瓶子内容
+            updateBottleContent(sourceBottle, document.getElementById('source-preview'));
+            updateBottleContent(targetBottle, document.getElementById('target-preview'));
+        }
+        
+        function updateBottleContent(bottle, preview) {
+            // 清除旧内容
+            while (bottle.firstChild) {
+                bottle.removeChild(bottle.firstChild);
+            }
+            
+            // 复制预览中的层
+            const layers = preview.querySelectorAll('.bottle-layer');
+            layers.forEach(layer => {
+                const newLayer = document.createElement('div');
+                newLayer.className = 'bottle-layer';
+                newLayer.style.height = layer.style.height;
+                newLayer.style.backgroundColor = layer.style.backgroundColor;
+                bottle.appendChild(newLayer);
+            });
+        }
+        
+        // 初始化瓶子
+        positionBottles();
+        
+        // 测试倒水
+        document.getElementById('test-water').addEventListener('click', startPourAnimation);
+        document.getElementById('reset').addEventListener('click', function() {
+            const streams = document.querySelectorAll('.water-stream');
+            streams.forEach(el => el.remove());
+            
+            const pourElements = document.querySelectorAll('.pour-element');
+            pourElements.forEach(el => el.remove());
+        });
+        
+        function startPourAnimation() {
+            // 清除旧元素
+            document.querySelectorAll('.water-stream, .pour-element').forEach(el => el.remove());
+            
+            const container = document.getElementById('debug-container');
+            const sourceBottle = document.getElementById('source-bottle');
+            
+            // 创建倒水元素（源瓶的克隆）
+            const pourElement = document.createElement('div');
+            pourElement.className = 'pour-element test-bottle';
+            pourElement.style.width = sourceBottle.offsetWidth + 'px';
+            pourElement.style.height = sourceBottle.offsetHeight + 'px';
+            pourElement.style.left = sourceBottle.offsetLeft + 'px';
+            pourElement.style.top = sourceBottle.offsetTop + 'px';
+            
+            // 复制源瓶内容
+            updateBottleContent(pourElement, document.getElementById('source-preview'));
+            
+            container.appendChild(pourElement);
+            
+            // 旋转瓶子
+            setTimeout(() => {
+                pourElement.style.transformOrigin = 'bottom center';
+                pourElement.style.transform = 'rotate(-45deg)';
+                
+                // 显示水流
+                setTimeout(createWaterStream, 300);
+            }, 500);
+        }
+        
+        function createWaterStream() {
+            const container = document.getElementById('debug-container');
+            const pourElement = document.querySelector('.pour-element');
+            const targetBottle = document.getElementById('target-bottle');
+            
+            if (!pourElement) return;
+            
+            // 创建水流元素
+            const streamElement = document.createElement('div');
+            streamElement.className = 'water-stream';
+            
+            // 创建水流本体
+            const waterBody = document.createElement('div');
+            waterBody.className = 'water-body';
+            waterBody.style.backgroundColor = '#3498db';
+            
+            // 添加到容器
+            streamElement.appendChild(waterBody);
+            container.appendChild(streamElement);
+            
+            // 计算位置
+            updateWaterStream();
+            
+            // 添加动画
+            if (!document.getElementById('debug-water-animation')) {
+                const styleElement = document.createElement('style');
+                styleElement.id = 'debug-water-animation';
+                styleElement.textContent = `
+                    @keyframes flowAnimation {
+                        0% { background-position: 0 0; }
+                        100% { background-position: 0 200%; }
+                    }
+                `;
+                document.head.appendChild(styleElement);
+            }
+            
+            waterBody.style.animation = 'flowAnimation 0.8s linear infinite';
+            
+            // 更新代码输出
+            updateCodeOutput();
+        }
+        
+        function updateWaterStream() {
+            const streamElement = document.querySelector('.water-stream');
+            if (!streamElement) return;
+            
+            const waterBody = streamElement.querySelector('.water-body');
+            const container = document.getElementById('debug-container');
+            const pourElement = document.querySelector('.pour-element') || document.getElementById('source-bottle');
+            const targetBottle = document.getElementById('target-bottle');
+            
+            // 获取位置
+            const pourRect = pourElement.getBoundingClientRect();
+            const targetRect = targetBottle.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            // 设置水流起始位置 - 使用可调整的偏移量
+            const startXPercent = parseFloat(startXSlider.value) / 100;
+            const startYPercent = parseFloat(startYSlider.value) / 100;
+            
+            const startX = pourRect.width * startXPercent;
+            const startY = pourRect.height * startYPercent;
+            
+            streamElement.style.left = `${pourRect.left + startX - containerRect.left}px`;
+            streamElement.style.top = `${pourRect.top + startY - containerRect.top}px`;
+            
+            // 计算水流长度
+            const targetCenterX = targetRect.left + targetRect.width/2 - (pourRect.left + startX);
+            const targetTopY = targetRect.top - (pourRect.top + startY);
+            const length = Math.sqrt(targetCenterX * targetCenterX + targetTopY * targetTopY);
+            
+            // 应用设置
+            waterBody.style.height = `${length}px`;
+            waterBody.style.width = `${widthSlider.value}px`;
+            waterBody.style.transform = `translateX(-50%) rotate(${angleSlider.value}deg)`;
+            
+            // 设置水流样式
+            waterBody.style.background = `
+                linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.2) 30%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.2) 70%, rgba(255,255,255,0.05)),
+                linear-gradient(to bottom, #3498dbAA, #3498dbEE 20%, #3498db 40%, #3498db 60%, #3498dbEE 80%, #3498dbAA)
+            `;
+            waterBody.style.backgroundSize = '20px 100%, 100% 40px';
+            waterBody.style.borderRadius = '8px';
+            
+            // 更新代码输出
+            updateCodeOutput();
+        }
+        
+        function updateCodeOutput() {
+            const codeOutput = document.getElementById('code-output');
+            const device = document.querySelector('.device-btn.active').getAttribute('data-device');
+            
+            // 获取当前设置
+            const width = widthSlider.value;
+            const angle = angleSlider.value;
+            const startX = startXSlider.value;
+            const startY = startYSlider.value;
+            
+            // 生成CSS代码
+            let cssCode = `/* ${device} 设备的水流样式 */\n`;
+            
+            if (device === 'desktop') {
+                cssCode += `.water-stream {\n  position: absolute;\n  z-index: 10;\n  pointer-events: none;\n}\n\n`;
+                cssCode += `.water-body {\n  position: absolute;\n  transform-origin: top center;\n  width: ${width}px;\n  transform: translateX(-50%) rotate(${angle}deg);\n  border-radius: 8px;\n}\n`;
+            } else {
+                cssCode += `@media only screen and (max-width: ${deviceSettings[device].width}) {\n`;
+                cssCode += `  .water-body {\n    width: ${width}px !important;\n    transform: translateX(-50%) rotate(${angle}deg) !important;\n  }\n`;
+                cssCode += `}\n`;
+            }
+            
+            // 生成JS代码
+            let jsCode = `\n/* ${device} 设备的水流位置计算 */\n`;
+            jsCode += `// 计算水流起点\nconst startX = pourRect.width * ${startX/100};\n`;
+            jsCode += `const startY = pourRect.height * ${startY/100};\n\n`;
+            jsCode += `// 设置水流起始位置\nstreamElement.style.left = \`\${pourRect.left + startX - containerRect.left}px\`;\n`;
+            jsCode += `streamElement.style.top = \`\${pourRect.top + startY - containerRect.top}px\`;\n`;
+            
+            codeOutput.textContent = cssCode + jsCode;
+        }
+        
+        // 拖动瓶子功能
+        function makeDraggable(element) {
+            let isDragging = false;
+            let offsetX, offsetY;
+            
+            element.addEventListener('mousedown', startDrag);
+            element.addEventListener('touchstart', startDrag, { passive: false });
+            
+            function startDrag(e) {
+                e.preventDefault();
+                isDragging = true;
+                
+                if (e.type === 'mousedown') {
+                    offsetX = e.clientX - element.getBoundingClientRect().left;
+                    offsetY = e.clientY - element.getBoundingClientRect().top;
+                    
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('mouseup', stopDrag);
+                } else {
+                    offsetX = e.touches[0].clientX - element.getBoundingClientRect().left;
+                    offsetY = e.touches[0].clientY - element.getBoundingClientRect().top;
+                    
+                    document.addEventListener('touchmove', drag, { passive: false });
+                    document.addEventListener('touchend', stopDrag);
+                }
+            }
+            
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                
+                const container = document.getElementById('debug-container');
+                const rect = container.getBoundingClientRect();
+                
+                let clientX, clientY;
+                if (e.type === 'mousemove') {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                } else {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+                
+                // 计算新位置
+                let left = clientX - rect.left - offsetX;
+                let top = clientY - rect.top - offsetY;
+                
+                // 限制在容器内
+                left = Math.max(0, Math.min(left, rect.width - element.offsetWidth));
+                top = Math.max(0, Math.min(top, rect.height - element.offsetHeight));
+                
+                element.style.left = `${left}px`;
+                element.style.top = `${top}px`;
+                
+                // 如果有水流，更新它
+                updateWaterStream();
+            }
+            
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+        }
+        
+        // 使瓶子可拖动
+        makeDraggable(document.getElementById('source-bottle'));
+        makeDraggable(document.getElementById('target-bottle'));
+        
+        // 初始化代码输出
+        updateCodeOutput();
+    </script>
+</body>
+</html>

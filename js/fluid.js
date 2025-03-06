@@ -458,22 +458,32 @@ class FluidSimulation {
             const pourRect = pourElement.getBoundingClientRect();
             const containerRect = animationContainer.getBoundingClientRect();
             
-            // 计算水流起点和终点
-            const startX = pourRect.width * 0.8 - pourRect.width * 0.7;
-            const startY = pourRect.height * 0.85 + pourRect.height * 0.06;
+            // 计算水流起点和终点 - 使用相对位置
+            const startXPercent = 0.1; // 瓶子宽度的10%
+            const startYPercent = 0.91; // 瓶子高度的91%
             
-            // 计算目标位置（瓶口）
-            const targetX = targetRect.left - pourRect.left + targetRect.width/2;
+            const startXX = pourRect.width * startXPercent;
+            const startXx = pourRect.width * 0.3;
+            const startX = targetRect.left;
+            const startY = targetRect.top;
+            const startYY = pourRect.height * startYPercent;
+            
+            // 计算目标位置（瓶口）- 使用相对位置
+            const targetXPercent = 0.5; // 目标瓶子中心点
+            const targetYPercent = 0; // 目标瓶子顶部
+            
+            const targetX = targetRect.left - pourRect.left + targetRect.width * targetXPercent;
             const targetY = targetRect.top - pourRect.top;
             
-            // 设置水流起始位置
-            streamElement.style.left = `${pourRect.left + startX - containerRect.left}px`;
-            streamElement.style.top = `${pourRect.top + startY - containerRect.top}px`;
+            // 设置水流起始位置 - 使用相对位置
+            streamElement.style.left = `${startX +startXx - containerRect.left}px`;
+            streamElement.style.top = `${startY + startXx - containerRect.top}px`;
             
             // 计算水流长度和角度
-            const dx = targetX - startX;
-            const dy = targetY - startY;
-            const length = Math.sqrt(dx * dx + dy * dy);
+            const dx = targetX - startXX;
+            const dy = targetY - startXx*0.6;
+            //const length = Math.sqrt(dx * dx + dy * dy);
+            const length = dy;
             const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
             // 计算目标瓶子的空余空间高度
@@ -484,7 +494,12 @@ class FluidSimulation {
             
             // 设置水流长度和角度
             const waterBody = streamElement.querySelector('.water-body');
-            waterBody.style.height = `${length + additionalLength*0.95 + 25}px`; // 设置水流长度 = 距离 + 目标瓶空余空间高度
+            // 使用相对单位计算水流长度
+            const baseLength = length; // 基础长度
+            const fillSpace = additionalLength; // 填充空间
+
+            // 设置水流属性
+            waterBody.style.height = `${baseLength + fillSpace}px`;
             waterBody.style.width = '10px'; // 设置水流宽度
             const fixedAngle = 2;
             waterBody.style.transform = `rotate(${fixedAngle}deg)`; // 设置固定角度
